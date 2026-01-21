@@ -57,14 +57,14 @@ source("R/rim_pre_dump_functions_final.R")
 
 # YOU HAVE ONLY TO CHANGE THIS VARIABLES: ----
 
-BASE_PATH <- file.path(getwd(), "data/2025/2025_04")
+BASE_PATH <- file.path(getwd(), "data/2025/2025_11_TEST")
 
 # Name of the folder that is stored the items to send error mail
 PRIVATE_FOLDER_NAME <- "private"
 
-FILENAME <- "muestreos_4_ICES.txt"
+FILENAME <- "muestreos_11_ICES.txt"
 
-MONTH <- 4
+MONTH <- 11
 
 YEAR <- "2025"
 
@@ -74,7 +74,7 @@ suffix_multiple_months <- ""
 
 # Suffix to add at the end of the export file name. This suffix will be added to
 # the end of the file name with a "_" as separation.
-suffix <- ""
+suffix <- "TEST"
 
 # VARIABLES --------------------------------------------------------------------
 ERRORS <- list() # list with all errors found in data frames
@@ -135,7 +135,7 @@ records <- importIPDFile(FILENAME, by_month = MONTH, path = PATH_IMPORT)
 # Import sireno fleet
 # Firstly download the fleet file from Informes --> Listados --> Por proyecto
 # in SIRENO, and then:
-fleet_sireno <- read.csv(file.path(PATH_PRIVATE, "IEOPROBARMARCO.TXT"),
+fleet_sireno <- read.csv(file.path(PATH_PRIVATE, "IEOPROBARACANDELARIO.TXT"),
   sep = ";", encoding = "latin1"
 )
 fleet_sireno <- fleet_sireno[, c("COD.BARCO", "NOMBRE", "ESTADO")]
@@ -238,46 +238,6 @@ suf <- paste0(
 
 exportListToXlsx(errors_category, suffix = suf, path = PATH_ERRORS)
 
-# SAVE FILES TO SHARED FOLDER --------------------------------------------------
-copyFilesToFolder(PATH_ERRORS, PATH_SHARE_ERRORS)
-
-# To send the errors category for mail
-
-# The internal_links data frame must have two variables:
-# - AREA_INF: influence area with the values GC, GS, GN and AC.
-# - INTERNAL_LINK: with the link to the error file in its AREA_INF. If there
-# aren't any error file of a certain AREA_INF, must be set to "".
-# - NOTES: any notes to add to the email. If there aren't, must be set to "".
-accesory_email_info <- data.frame(
-  AREA_INF = c(
-    "AC",
-    "GC",
-    "GN",
-    "GS"
-  ),
-  LINK = c(
-    "https://saco.csic.es/index.php/f/481810193",
-    "https://saco.csic.es/index.php/f/481810195",
-    "https://saco.csic.es/index.php/f/481810197",
-    "https://saco.csic.es/index.php/f/481810196"
-  ),
-  NOTES = c(
-    "",
-    "",
-    "",
-    ""
-  )
-)
-
-
-sendErrorsByEmail(
-  accesory_email_info = accesory_email_info,
-  contacts = CONTACTS,
-  credentials_file = "credentials",
-  identification_sampling = IDENTIFIER
-)
-
-
 # All the data saved by IPD are lengths samples so the MEDIDA variable can't be
 # "P" ("Pesos", weights) or empty. The function fix_medida_variable(df) fix it:
 records <- fix_medida_variable(records)
@@ -328,3 +288,41 @@ rstudioapi::documentSaveAll()
 # and the backup the scripts and files:
 sapmuebase::backupScripts(FILES_TO_BACKUP, path_backup = PATH_BACKUP)
 # backup_files()
+
+# SAVE FILES TO SHARED FOLDER --------------------------------------------------
+copy_folder_contents(BASE_PATH, PATH_SHARE_ERRORS)
+
+# SEND INTERNAL LINKS OF ERROR BY EMAIL ----------------------------------------
+
+# The internal_links data frame must have two variables:
+# - AREA_INF: influence area with the values GC, GS, GN and AC.
+# - INTERNAL_LINK: with the link to the error file in its AREA_INF. If there
+# aren't any error file of a certain AREA_INF, must be set to "".
+# - NOTES: any notes to add to the email. If there aren't, must be set to "".
+accesory_email_info <- data.frame(
+  AREA_INF = c(
+    "AC",
+    "GC",
+    "GN",
+    "GS"
+  ),
+  LINK = c(
+    "",
+    "",
+    "",
+    ""
+  ),
+  NOTES = c(
+    "",
+    "",
+    "",
+    ""
+  )
+)
+
+sendErrorsByEmail(
+  accesory_email_info = accesory_email_info,
+  contacts = CONTACTS,
+  credentials_file = "credentials",
+  identification_sampling = IDENTIFIER
+)
